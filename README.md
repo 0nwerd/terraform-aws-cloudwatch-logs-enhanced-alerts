@@ -1,1 +1,1 @@
-# terraform-aws-cloudwatch-logs-enhanced-alarms-notifications
+# terraform-aws-cloudwatch-logs-enhanced-alerts
