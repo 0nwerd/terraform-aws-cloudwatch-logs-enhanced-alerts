@@ -19,7 +19,25 @@ variable "slack_settings" {
   default = []
 
   validation {
-    condition = length(var.slack_settings) == 1
+    condition     = length(var.slack_settings) == 1
     error_message = "Only one Slack channel is authorized here."
   }
+}
+
+variable "lambda_code_path" {
+  type    = string
+  default = "./lambda/log_errors_alarm_trigger.py"
+
+  validation {
+    condition = endswith(var.lambda_code_path, ".py")
+  }
+}
+
+variable "lambda_runtime" {
+  type    = string
+  default = "python3.8"
+}
+
+variable "vpc_id" {
+  type = string
 }

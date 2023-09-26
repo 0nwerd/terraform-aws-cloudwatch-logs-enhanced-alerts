@@ -1,15 +1,15 @@
 data "aws_iam_policy_document" "assume_role_chatbot" {
   statement {
     actions = ["sts:AssumeRole"]
-		principals = [{
-			"Service" : "chatbot.amazonaws.com"
-		}]
+    principals = [{
+      "Service" : "chatbot.amazonaws.com"
+    }]
   }
 }
 
 resource "aws_iam_role" "chatbot_slack_role" {
-  name_prefix         = "${var.name}_chatbot_slack_role"
-  assume_role_policy  = data.aws_iam_policy_document.assume_role_chatbot.json
+  name_prefix        = "${var.name}_chatbot_slack_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_chatbot.json
 }
 
 data "aws_iam_policy_document" "chatbot_slack_policy" {
