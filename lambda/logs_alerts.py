@@ -12,6 +12,9 @@ from time import time
 
 MAX = int(environ['MAX'])
 
+dynamodb_client = boto3.client('dynamodb')
+sns_client = boto3.client('sns')
+
 
 def aws_url_encode(text):
     replace_map = {
@@ -26,36 +29,36 @@ def aws_url_encode(text):
     return rx.sub(one_xlat, text)
     
 
-def logpayload(event):
-    compressed_payload = b64decode(event['awslogs']['data'])
+def unload_payload(event):
+    if "awslogs" in event:
+        compressed_payload = b64decode(event['awslogs']['data'])
+    else:
+        compressed_payload = b64decode(event)
+    
     uncompressed_payload = decompress(compressed_payload)
-    log_payload = loads(uncompressed_payload)
-    return log_payload
+    payload = loads(uncompressed_payload)
+    
+    return payload
 
 
 def error_details(payload):
     log_event = payload["logEvents"][0]
-    message = loads(payload["message"])
     
     error_details = {
         "log_group" : payload['logGroup'],
         "log_stream" : payload['logStream'],
         "owner" : payload["owner"],
         "timestamp" : log_event['timestamp'],
-        "message" : payload["message"]
+        "message" : log_event["message"]
     }
 
-    if "trace_id" in message:
-        error_details["trace_id"] = message["trace_id"]
+    if "trace_id" in log_event["message"]:
+        error_details["trace_id"] = log_event["message"]["trace_id"]
 
-    if "request_id" in message:
-        error_details["request_id"] = message["request_id"]
-    
     return error_details
 
 
-def error_analysis(error_msg):
-    dynamodb_client = boto3.client('dynamodb')
+def error_analysis(error_msg, payload):
     is_trigger = False
     counter = 0
     item = dynamodb_client.get_item(
@@ -113,6 +116,7 @@ def error_analysis(error_msg):
                 'n' : {"N" : "1"},
                 'm' : {"N" : "1"},
                 'counter' : {"N" : "0"},
+                'payload' : {"S" : payload},
                 'ttl' : {"N" : str(int(time()) + 120)}
             }
         )
@@ -122,7 +126,6 @@ def error_analysis(error_msg):
 
 
 def publish_message(details, counter):
-    sns_client = boto3.client('sns')
     datetime_error = datetime.fromtimestamp(details['timestamp']/1000)
     
     try:
@@ -131,7 +134,7 @@ def publish_message(details, counter):
             "source": "custom",
             "content": {
                 "textType": "client-markdown",
-                "title": f":alert: Error on `{details['log_group'].split('/')[-1]}` | Account: `{details['owner']}` | The: `{datetime_error.strftime('%d-%m-%Y')}` at `{datetime_error.strftime('%H:%M:%S')}`",
+                "title": f":rotating_light: Error on `{details['log_group'].split('/')[-1]}` | Account: `{details['owner']}` | The: `{datetime_error.strftime('%d-%m-%Y')}` at `{datetime_error.strftime('%H:%M:%S')}`",
                 "description": f'''
                     :arrow_right: Timestamp: `{datetime_error.strftime('%d-%m-%Y %H:%M:%S')} UTC` \n
                     :arrow_right: Log stream: <https://eu-central-1.console.aws.amazon.com/cloudwatch/home?region=eu-central-1#logsV2:log-groups/log-group/{details['log_group'].replace('/', '%252F')}/log-events/{aws_url_encode(details['log_stream'])}|{details['log_stream']}> \n
@@ -145,10 +148,7 @@ def publish_message(details, counter):
             slack_message["content"]["description"] += f"\n :warning: Number of errors since last notification: `{counter}`"
 
         if "trace_id" in details and details["trace_id"] != "1-00000000-000000000000000000000000":
-            slack_message["content"]["description"] += f"\n :informations-source: Trace ID: <https://eu-central-1.console.aws.amazon.com/cloudwatch/home?region=eu-central-1#xray:traces/{details['trace_id']}|{details['trace_id']}>"
-        
-        if "request_id" in details:
-            slack_message["content"]["description"] += f"\n :informations-source: Request ID: `{details['request_id']}`"
+            slack_message["content"]["description"] += f"\n :information_source: Trace ID: <https://eu-central-1.console.aws.amazon.com/cloudwatch/home?region=eu-central-1#xray:traces/{details['trace_id']}|{details['trace_id']}>"
 
         sns_client.publish(
             TopicArn=environ['SNS_ARN'],
@@ -162,9 +162,19 @@ def publish_message(details, counter):
 
 
 def lambda_handler(event, context):
-    payload = logpayload(event)
-    details = error_details(payload)
-    trigger, counter = error_analysis(details["message"] + "-" + details["log_group"])
+    if "awslogs" in event:
+        payload = unload_payload(event)
+        details = error_details(payload)
+        trigger, counter = error_analysis(details["message"] + "-" + details["log_group"], event['awslogs']['data'])
+    else:
+        item = event['Records'][0]['dynamodb']['OldImage']
+        counter = int(item['counter']['N'])
+        if counter > 0:
+            payload = unload_payload(item['payload']['S'])
+            details = error_details(payload)
+            trigger = True
+        else:
+            trigger = False
 
     if trigger:
         publish_message(details, counter)

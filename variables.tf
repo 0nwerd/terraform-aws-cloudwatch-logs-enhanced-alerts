@@ -1,43 +1,53 @@
 variable "name" {
-  type = string
+  description = "Name for the ressources"
+  type        = string
 }
 
 variable "account_id" {
-  type = string
+  description = "AWS account ID"
+  type        = string
 }
 
 variable "region" {
-  type = string
+  description = "AWS region (where to deploy everything)"
+  type        = string
 }
 
 variable "slack_settings" {
-  type = list(object({
+  description = "Slack channel ID and workplace ID"
+  type = object({
     slack_channel_id : string
     slack_workspace_id : string
-  }))
-
-  default = []
-
-  validation {
-    condition     = length(var.slack_settings) == 1
-    error_message = "Only one Slack channel is authorized here."
-  }
+  })
+  default = null
 }
 
 variable "lambda_code_path" {
-  type    = string
-  default = "./lambda/log_errors_alarm_trigger.py"
-
-  validation {
-    condition = endswith(var.lambda_code_path, ".py")
-  }
+  description = "Path of the lambda function code"
+  type        = string
+  default     = "./lambda/logs_alerts.py"
 }
 
 variable "lambda_runtime" {
-  type    = string
-  default = "python3.8"
+  description = "Runtime for the lambda"
+  type        = string
+  default     = "python3.8"
 }
 
-variable "vpc_id" {
-  type = string
+variable "lambda_environment_variables" {
+  description = "A map that defines environment variables for the Lambda Function."
+  type        = map(string)
+  default     = {}
+}
+
+variable "vpc_subnet_ids" {
+  description = "List of subnet IDs when the function should run in a VPC"
+  type        = list(string)
+  default     = null
+}
+
+variable "vpc_security_group_ids" {
+  description = "List of security group IDs when the function should run in a VPC"
+  type        = list(string)
+  default     = null
 }

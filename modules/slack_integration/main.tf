@@ -1,9 +1,13 @@
+########################
+# IAM Role and Policies
+########################
 data "aws_iam_policy_document" "assume_role_chatbot" {
   statement {
     actions = ["sts:AssumeRole"]
-    principals = [{
-      "Service" : "chatbot.amazonaws.com"
-    }]
+    principals {
+      type        = "Service"
+      identifiers = ["chatbot.amazonaws.com"]
+    }
   }
 }
 
@@ -29,10 +33,13 @@ resource "aws_iam_role_policy" "chatbot_slack_role_policy" {
   policy = data.aws_iam_policy_document.chatbot_slack_policy.json
 }
 
+##################################
+# AWS Chatbot Slack Configuration
+##################################
 resource "awscc_chatbot_slack_channel_configuration" "slack_alerts" {
   configuration_name = "${var.name}_chatbot_slack_alerts"
   iam_role_arn       = aws_iam_role.chatbot_slack_role.arn
-  slack_channel_id   = var.slack_channel_id
-  slack_workspace_id = var.slack_workspace_id
-  sns_topic_arns     = [aws_sns_topic.alarm_error_lambda_sns_topic.arn]
+  slack_channel_id   = var.slack_settings.slack_channel_id
+  slack_workspace_id = var.slack_settings.slack_workspace_id
+  sns_topic_arns     = [var.sns_topic_arn]
 }
