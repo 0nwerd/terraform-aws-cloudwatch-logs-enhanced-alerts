@@ -64,7 +64,7 @@ def error_analysis(error_msg, payload):
     item = dynamodb_client.get_item(
                 TableName=environ['DYNAMODB_TABLE'],
                 Key={
-                    'error_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
+                    'error_message_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
                 }
             )
             
@@ -74,7 +74,7 @@ def error_analysis(error_msg, payload):
             dynamodb_client.update_item(
                 TableName=environ['DYNAMODB_TABLE'],
                 Key={
-                    'error_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
+                    'error_message_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
                 },
                 UpdateExpression='SET #timestamp = :val1, #n = :val2, #m = :val3, #ttl = :val4, #counter = :val5',
                 ExpressionAttributeNames={
@@ -97,7 +97,7 @@ def error_analysis(error_msg, payload):
             dynamodb_client.update_item(
                 TableName=environ['DYNAMODB_TABLE'],
                 Key={
-                    'error_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
+                    'error_message_hash': {"S" : str(b64encode(error_msg.encode('utf-8')))}
                 },
                 UpdateExpression='SET #counter = :val3',
                 ExpressionAttributeNames={
@@ -111,7 +111,7 @@ def error_analysis(error_msg, payload):
         dynamodb_client.put_item(
             TableName=environ['DYNAMODB_TABLE'],
             Item={
-                'error_hash': { "S" : str(b64encode(error_msg.encode('utf-8')))},
+                'error_message_hash': { "S" : str(b64encode(error_msg.encode('utf-8')))},
                 'timestamp': {"N" : str(int(time()) + 60)},
                 'n' : {"N" : "1"},
                 'm' : {"N" : "1"},
@@ -136,10 +136,7 @@ def publish_message(details, counter):
                 "textType": "client-markdown",
                 "title": f":rotating_light: Error on `{details['log_group'].split('/')[-1]}` | Account: `{details['owner']}` | The: `{datetime_error.strftime('%d-%m-%Y')}` at `{datetime_error.strftime('%H:%M:%S')}`",
                 "description": f'''
-                    :arrow_right: Timestamp: `{datetime_error.strftime('%d-%m-%Y %H:%M:%S')} UTC` \n
-                    :arrow_right: Log stream: <https://eu-central-1.console.aws.amazon.com/cloudwatch/home?region=eu-central-1#logsV2:log-groups/log-group/{details['log_group'].replace('/', '%252F')}/log-events/{aws_url_encode(details['log_stream'])}|{details['log_stream']}> \n
-                    :arrow_right: Error: `{details['message']}` \n
-                    :arrow_right: Beginning of the error message: \n ```{details['full_message'][:25]}...```
+                    :arrow_right: Timestamp: `{datetime_error.strftime('%d-%m-%Y %H:%M:%S')} UTC` \n:arrow_right: Log stream: <https://eu-central-1.console.aws.amazon.com/cloudwatch/home?region=eu-central-1#logsV2:log-groups/log-group/{details['log_group'].replace('/', '%252F')}/log-events/{aws_url_encode(details['log_stream'])}|{details['log_stream']}> \n:arrow_right: Error: `{details['message']}` \n
                 '''
             }
         }
