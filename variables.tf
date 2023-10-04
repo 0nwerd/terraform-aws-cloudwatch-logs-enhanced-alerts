@@ -25,7 +25,7 @@ variable "slack_settings" {
 variable "lambda_code_path" {
   description = "Path of the lambda function code"
   type        = string
-  default     = "./lambda/logs_alerts.py"
+  default     = "logs_alerts.py"
 }
 
 variable "lambda_runtime" {

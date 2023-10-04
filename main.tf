@@ -5,6 +5,7 @@ locals {
     MAX            = 600
   }
   lambda_environment_variables = merge(local.default_environment_variables, var.lambda_environment_variables)
+  lambda_code_path             = var.lambda_code_path == "logs_alerts.py" ? "${path.module}/lambda/logs_alerts.py" : var.lambda_code_path
 }
 
 #######################################
@@ -113,8 +114,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
 ##################
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = var.lambda_code_path
-  output_path = "build.zip"
+  source_file = local.lambda_code_path
+  output_path = "${path.module}/lambda/build.zip"
 }
 
 resource "aws_lambda_function" "lambda" {
