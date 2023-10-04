@@ -23,15 +23,21 @@ variable "slack_settings" {
 }
 
 variable "lambda_code_path" {
-  description = "Path of the lambda function code"
+  description = "Path of the Lambda function code"
   type        = string
   default     = "logs_alerts.py"
 }
 
 variable "lambda_runtime" {
-  description = "Runtime for the lambda"
+  description = "Runtime for the Lambda"
   type        = string
   default     = "python3.8"
+}
+
+variable "lambda_handler" {
+  description = "Handler for the Lambda"
+  type        = string
+  default     = "logs_alerts.lambda_handler"
 }
 
 variable "lambda_environment_variables" {

@@ -127,6 +127,7 @@ resource "aws_lambda_function" "lambda" {
   timeout          = 10
 
   runtime = var.lambda_runtime
+  handler = var.lambda_handler
 
   dynamic "environment" {
     for_each = length(keys(local.lambda_environment_variables)) == 0 ? [] : [true]
