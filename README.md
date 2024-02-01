@@ -1,7 +1,7 @@
-## Medium Article
-For more information about this module, check this article: [https://medium.com/@louis-fiori/cloudwatch-logs-enhanced-alerts-a50ea08d0845](https://medium.com/@louis-fiori/cloudwatch-logs-enhanced-alerts-a50ea08d0845)
+## 📝 Medium Article
+For more information about this module, check out this article: [https://medium.com/@louis-fiori/cloudwatch-logs-enhanced-alerts-a50ea08d0845](https://medium.com/@louis-fiori/cloudwatch-logs-enhanced-alerts-a50ea08d0845)
  
- ## Requirements
+ ## 🔗 Requirements
 
 | Name | Version |
 |------|---------|
@@ -9,7 +9,7 @@ For more information about this module, check this article: [https://medium.com/
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 | <a name="requirement_awscc"></a> [awscc](#requirement\_awscc) | >= 0.2 |
 
-## Inputs
+## ➡️ Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -24,7 +24,7 @@ For more information about this module, check this article: [https://medium.com/
 | <a name="input_vpc_security_group_ids"></a> [vpc\_security\_group\_ids](#input\_vpc\_security\_group\_ids) | List of security group IDs when the function should run in a VPC | `list(string)` | `null` | no |
 | <a name="input_vpc_subnet_ids"></a> [vpc\_subnet\_ids](#input\_vpc\_subnet\_ids) | List of subnet IDs when the function should run in a VPC | `list(string)` | `null` | no |
 
-## Outputs
+## ⬅️ Outputs
 
 | Name | Description |
 |------|-------------|
